@@ -1,14 +1,7 @@
-import { StatusBar } from "expo-status-bar";
 import React, { useState, useEffect } from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  View,
-  FlatList,
-  Linking,
-} from "react-native";
+import { ActivityIndicator, Text, View, FlatList, Linking } from "react-native";
 import moment from "moment";
+import styles from "./styles";
 import { Card, Button, Icon } from "react-native-elements";
 
 const filterForUniqueArticles = (arr) => {
@@ -29,17 +22,31 @@ export default function App() {
   const [articles, setArticles] = useState([]);
   const [pageNumber, setPageNumber] = useState(1);
   const [hasErrored, setHasApiError] = useState(false);
+  const [lastPageReached, setLastPageReached] = useState(false);
 
   const getNews = async () => {
+    if (lastPageReached) return;
     setLoading(true);
     try {
       const response = await fetch(
-        `https://newsapi.org/v2/top-headlines?country=us&apiKey=6eec2f7fe6cd4c40a3fef8f33f5778fe&page=${pageNumber}`
+        `https://newsapi.org/v2/top-headlines?country=us&apiKey=986af79db75b4566a558b7ac75d44da6&page=${pageNumber}`
       );
       const jsonData = await response.json();
       const newArticleList = filterForUniqueArticles(
         articles.concat(jsonData.articles)
       );
+
+      const hasMoreArticles = jsonData.articles.length > 0;
+      if (hasMoreArticles) {
+        const newArticleList = filterForUniqueArticles(
+          articles.concat(jsonData.articles)
+        );
+        setArticles(newArticleList);
+        setPageNumber(pageNumber + 1);
+      } else {
+        setLastPageReached(true);
+      }
+
       setArticles(newArticleList);
       setPageNumber(pageNumber + 1);
     } catch (error) {
@@ -50,7 +57,7 @@ export default function App() {
 
   useEffect(() => {
     getNews();
-  }, []);
+  }, [articles]);
 
   const onPress = (url) => {
     Linking.canOpenURL(url).then((supported) => {
@@ -112,52 +119,17 @@ export default function App() {
         data={articles}
         renderItem={renderArticleItem}
         onEndReached={getNews}
-        onEndReachedThreshold={1}
+        onEndReachedThreshold={0.4}
         keyExtractor={(item) => item.title}
         key={(item) => item.title}
         ListFooterComponent={
-          <ActivityIndicator size="large" loading={loading} />
+          lastPageReached ? (
+            <Text>No more articles</Text>
+          ) : (
+            <ActivityIndicator size="large" loading={loading} />
+          )
         }
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  containerFlex: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  container: {
-    flex: 1,
-    marginTop: 40,
-    alignItems: "center",
-    backgroundColor: "#fff",
-    justifyContent: "center",
-  },
-  header: {
-    height: 30,
-    width: "100%",
-    backgroundColor: "pink",
-  },
-  row: {
-    flexDirection: "row",
-  },
-  label: {
-    fontSize: 16,
-    color: "black",
-    marginRight: 10,
-    fontWeight: "bold",
-  },
-  info: {
-    fontSize: 16,
-    color: "grey",
-  },
-});
