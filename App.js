@@ -1,24 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { ActivityIndicator, Text, View, FlatList, Linking } from "react-native";
-import moment from "moment";
+import { ActivityIndicator, Text, View, FlatList } from "react-native";
 import styles from "./styles";
-import { Card, Button, Icon } from "react-native-elements";
-
-const filterForUniqueArticles = (arr) => {
-  const cleaned = [];
-  arr.forEach((itm) => {
-    let unique = true;
-    cleaned.forEach((itm2) => {
-      const isEqual = JSON.stringify(itm) === JSON.stringify(itm2);
-      if (isEqual) unique = false;
-    });
-    if (unique) cleaned.push(itm);
-  });
-  return cleaned;
-};
+import renderArticleItem from "./components/renderArticleItem";
+import filterForUniqueArticles from "./components/filterForUniqueArticles";
 
 export default function App() {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [articles, setArticles] = useState([]);
   const [pageNumber, setPageNumber] = useState(1);
   const [hasErrored, setHasApiError] = useState(false);
@@ -49,6 +36,7 @@ export default function App() {
 
       setArticles(newArticleList);
       setPageNumber(pageNumber + 1);
+      setLoading(false);
     } catch (error) {
       setHasApiError(true);
     }
@@ -58,40 +46,6 @@ export default function App() {
   useEffect(() => {
     getNews();
   }, [articles]);
-
-  const onPress = (url) => {
-    Linking.canOpenURL(url).then((supported) => {
-      if (supported) {
-        Linking.openURL(url);
-      } else {
-        console.log(`Don't know how to open URL: ${url}`);
-      }
-    });
-  };
-
-  const renderArticleItem = ({ item }) => {
-    return (
-      <Card title={item.title} image={{ uri: item.urlToImage }}>
-        <View style={styles.row}>
-          <Text style={styles.label}>Source</Text>
-          <Text style={styles.info}>{item.source.name}</Text>
-        </View>
-        <Text style={{ marginBottom: 10 }}>{item.content}</Text>
-        <View style={styles.row}>
-          <Text style={styles.label}>Published</Text>
-          <Text style={styles.info}>
-            {moment(item.publishedAt).format("LLL")}
-          </Text>
-        </View>
-        <Button
-          icon={<Icon />}
-          title="Read more"
-          backgroundColor="#03A9F4"
-          onPress={() => onPress(item.url)}
-        />
-      </Card>
-    );
-  };
 
   if (loading) {
     return (
@@ -119,7 +73,7 @@ export default function App() {
         data={articles}
         renderItem={renderArticleItem}
         onEndReached={getNews}
-        onEndReachedThreshold={0.4}
+        onEndReachedThreshold={1}
         keyExtractor={(item) => item.title}
         key={(item) => item.title}
         ListFooterComponent={
