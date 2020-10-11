@@ -37,6 +37,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "grey",
   },
+  textFooter: {
+    fontSize: 14,
+    color: "red",
+  },
 });
 
 export default styles;

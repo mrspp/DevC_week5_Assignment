@@ -78,7 +78,7 @@ export default function App() {
         key={(item) => item.title}
         ListFooterComponent={
           lastPageReached ? (
-            <Text>No more articles</Text>
+            <Text style={styles.textFooter}>No more articles</Text>
           ) : (
             <ActivityIndicator size="large" loading={loading} />
           )
